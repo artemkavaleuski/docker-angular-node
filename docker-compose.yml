@@ -4,13 +4,29 @@ services:
     build:
         context: ./server
         dockerfile: Dockerfile
+    restart: always
     env_file:
         - ./server/.env
     ports:
         - "3000:3000"
+    depends_on: 
+        - mongodb
+    networks:
+        - nodeapp-network
   client:
     build:
       context: ./client
       dockerfile: Dockerfile
     ports:
       - "8888:80"
+  mongodb:
+    image: mongo
+    volumes:
+      - ./data:/data/db
+    networks:
+      - nodeapp-network
+    ports:
+      - "27017:27017"
+networks:
+  nodeapp-network:
+    driver: bridge

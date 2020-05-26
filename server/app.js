@@ -3,16 +3,23 @@ const express = require('express');
 const cors = require('cors')
 const cookieParser = require('cookie-parser');;
 const mongoose = require('mongoose');
-const indexRouter = require('./routes/index');
+const passport = require('passport');
+const dummyRouter = require('./routes/dummy');
+const userRouter = require('./routes/user');
+const jwtStrategy = require('./helpers/jwtStrategy');
+const localStrategy = require('./helpers/localStrategy');
+const Dummies = require('./models/Dummy');
+
 const app = express();
 
-
+passport.use(jwtStrategy);
+passport.use(localStrategy);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-const whitelist = ['http://localhost:8888']
+const whitelist = ['http://localhost:8888','http://localhost:4200']
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -26,12 +33,16 @@ const corsOptions = {
 
 app.use(cors(corsOptions))
 
-app.use('/', indexRouter);
+app.use('/dummy', dummyRouter);
+app.use('/users', userRouter);
 
 mongoose.connect(
-  `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_NAME}?retryWrites=true&w=majority`,
+  `mongodb://${process.env.DB_HOST}`,
   { useNewUrlParser: true }
 ).then(() => {
+  const autoDummy = new Dummies();
+  autoDummy.text = 'Dummy Text'
+  autoDummy.save()
   app.listen(process.env.PORT,process.env.HOST,() => {
     console.log(`Server running on port ${process.env.PORT}`)
   });  
